@@ -40,8 +40,8 @@ services:
 
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.api
+      context: .
+      dockerfile: backend/Dockerfile.api
     env_file:
       - ./backend/.env.example
     environment:
@@ -65,8 +65,8 @@ services:
 
   worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.worker
+      context: .
+      dockerfile: backend/Dockerfile.worker
     env_file:
       - ./backend/.env.example
     environment:

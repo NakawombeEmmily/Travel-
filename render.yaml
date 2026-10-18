@@ -7,7 +7,7 @@ services:
     name: travel-system-api
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.api
-    dockerContext: ./backend
+    dockerContext: .
     plan: starter
     healthCheckPath: /api/v1/health
     preDeployCommand: alembic upgrade head
@@ -58,7 +58,7 @@ services:
     name: travel-system-worker
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: ./backend
+    dockerContext: .
     plan: starter
     envVars:
       - key: ENVIRONMENT
@@ -105,7 +105,7 @@ crons:
   - name: travel-system-outbox-sync
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: ./backend
+    dockerContext: .
     schedule: "*/5 * * * *"
     envVars:
       - key: DATABASE_URL
@@ -120,7 +120,7 @@ crons:
   - name: travel-system-reminders
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: ./backend
+    dockerContext: .
     schedule: "0 9 * * *"
     envVars:
       - key: DATABASE_URL
@@ -133,7 +133,7 @@ crons:
   - name: travel-system-reconciliation
     runtime: docker
     dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: ./backend
+    dockerContext: .
     schedule: "0 2 * * *"
     envVars:
       - key: DATABASE_URL
