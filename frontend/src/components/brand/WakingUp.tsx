@@ -24,7 +24,7 @@ export function WakingUp({ onReady }: Props) {
           onReady();
         }
       } catch {
-        if (!cancelled && attempts >= 10) {
+        if (!cancelled && attempts >= 30) {
           clearInterval(interval);
           setFailed(true);
         }
