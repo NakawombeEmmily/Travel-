@@ -1,6 +1,7 @@
-const API_BASE: string =
-  (import.meta as unknown as { env: Record<string, string> }).env
-    .VITE_API_BASE_URL || "http://localhost:8000";
+const RAW_API_BASE: string | undefined = import.meta.env.VITE_API_BASE_URL;
+const API_BASE: string = RAW_API_BASE || "http://localhost:8000";
+
+export const API_BASE_MISSING = !RAW_API_BASE;
 
 const TOKEN_KEY = "ts.access_token";
 const REFRESH_KEY = "ts.refresh_token";
