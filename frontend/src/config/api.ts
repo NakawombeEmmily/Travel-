@@ -34,9 +34,11 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string> | undefined),
   };
+  if (options.body && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
   const token = getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 

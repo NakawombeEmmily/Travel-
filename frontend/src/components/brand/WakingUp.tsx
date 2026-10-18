@@ -8,11 +8,14 @@ interface Props {
 
 export function WakingUp({ onReady }: Props) {
   const [seconds, setSeconds] = useState(0);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    let attempts = 0;
     const start = Date.now();
     const interval = setInterval(async () => {
+      attempts += 1;
       setSeconds(Math.round((Date.now() - start) / 1000));
       try {
         await api.get("/health");
@@ -21,7 +24,10 @@ export function WakingUp({ onReady }: Props) {
           onReady();
         }
       } catch {
-        if (cancelled) clearInterval(interval);
+        if (!cancelled && attempts >= 10) {
+          clearInterval(interval);
+          setFailed(true);
+        }
       }
     }, 3000);
     return () => {
@@ -33,21 +39,37 @@ export function WakingUp({ onReady }: Props) {
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
-  const misconfigured = API_BASE_MISSING && !isLocalhost;
+  const showError = (API_BASE_MISSING || failed) && !isLocalhost;
 
-  if (misconfigured) {
+  if (showError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <Logo size="xl" withWordmark />
         <p className="text-sm font-medium text-[var(--text)]">
-          API URL is not configured.
+          Can&rsquo;t reach the server.
         </p>
         <p className="max-w-md text-xs text-[var(--text-muted)]">
-          In Vercel → Settings → Environment Variables, set{" "}
-          <code className="mx-1 rounded bg-black/5 px-1">VITE_API_BASE_URL</code>{" "}
-          to your Render API URL (e.g.
-          https://travel-system-api-xxxx.onrender.com), then redeploy.
+          Couldn&rsquo;t reach{" "}
+          <code className="rounded bg-black/5 px-1">{API_BASE}</code> after{" "}
+          {seconds}s. Check that:
         </p>
+        <ul className="max-w-md list-disc space-y-1 text-left text-xs text-[var(--text-muted)]">
+          <li>
+            Vercel&rsquo;s <code>VITE_API_BASE_URL</code> is your Render API URL
+          </li>
+          <li>
+            Render&rsquo;s <code>CORS_ORIGINS</code> includes{" "}
+            <code>{window.location.origin}</code>
+          </li>
+          <li>The Render API service is live (finished deploying)</li>
+        </ul>
+        <button
+          type="button"
+          className="btn-primary mt-2"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
       </div>
     );
   }
