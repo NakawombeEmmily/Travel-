@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging, dev]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Ruff
+        run: ruff check app tests
+      - name: Mypy
+        run: mypy app
+        continue-on-error: true
+      - name: Pytest
+        env:
+          SECRET_KEY: ci-secret
+          JWT_SECRET: ci-jwt
+          JWT_REFRESH_SECRET: ci-refresh
+          ENCRYPTION_KEY: Y2ktZW5jcnlwdGlvbi1rZXktMzItYnl0ZXMh
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          DATABASE_URL_DIRECT: sqlite+aiosqlite:///:memory:
+          ADMIN_DATABASE_URL: sqlite+aiosqlite:///:memory:
+          REDIS_URL: redis://localhost:6379/0
+        run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://example.onrender.com

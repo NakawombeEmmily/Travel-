@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "travel-system-backend"
+version = "0.1.0"
+description = "Travel System API"
+authors = [{name="Travel System"}]
+requires-python = ">=3.12,<3.15"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+select = ["E","F","I","B","UP","N","S","C4","DTZ","T10","T20","SIM","RUF"]
+ignore = ["E501","S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+[tool.pytest.ini_options]
+asyncio_mode = 'auto'
+testpaths = ['tests']
+filterwarnings = ['ignore::DeprecationWarning']

@@ -1,0 +1,144 @@
+# Render blueprint — API, worker, and cron jobs.
+# Provision Neon (pooled + direct URLs), Render Key Value (Redis), R2, Resend first,
+# then set the environment variables below in the Render dashboard.
+
+services:
+  - type: web
+    name: travel-system-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.api
+    dockerContext: ./backend
+    plan: starter
+    healthCheckPath: /api/v1/health
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false # Neon pooled URL
+      - key: DATABASE_URL_DIRECT
+        sync: false # Neon direct URL (used by Alembic)
+      - key: ADMIN_DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: travel-system-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        sync: false # base64 32-byte key
+      - key: CORS_ORIGINS
+        sync: false # Vercel domain(s)
+      - key: FRONTEND_URL
+        sync: false
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_BUCKET
+        sync: false
+      - key: STORAGE_ACCESS_KEY
+        sync: false
+      - key: STORAGE_SECRET_KEY
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: EMAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BASE_CURRENCY
+        value: UGX
+
+  - type: worker
+    name: travel-system-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.worker
+    dockerContext: ./backend
+    plan: starter
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: travel-system-redis
+          property: connectionString
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_BUCKET
+        sync: false
+      - key: STORAGE_ACCESS_KEY
+        sync: false
+      - key: STORAGE_SECRET_KEY
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: EMAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+
+databases:
+  - name: travel-system-redis
+    type: redis
+    plan: starter
+    ipAllowList: []
+
+crons:
+  - name: travel-system-outbox-sync
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.worker
+    dockerContext: ./backend
+    schedule: "*/5 * * * *"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+    buildCommand: "pip install -r requirements.txt"
+    runCommand: "python -m app.tasks.outbox_sync"
+
+  - name: travel-system-reminders
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.worker
+    dockerContext: ./backend
+    schedule: "0 9 * * *"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+    buildCommand: "pip install -r requirements.txt"
+    runCommand: "python -m app.tasks.reminders"
+
+  - name: travel-system-reconciliation
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.worker
+    dockerContext: ./backend
+    schedule: "0 2 * * *"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_DATABASE_URL
+        sync: false
+    buildCommand: "pip install -r requirements.txt"
+    runCommand: "python -m app.tasks.reconciliation"
