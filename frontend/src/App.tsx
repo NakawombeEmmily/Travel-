@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
-import { WakingUp } from "@/components/brand/WakingUp";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ClientsPage } from "@/features/clients/ClientsPage";
@@ -36,17 +34,11 @@ function Root() {
 }
 
 export default function App() {
-  const [awake, setAwake] = useState(false);
-
   return (
     <BrowserRouter>
-      {!awake ? (
-        <WakingUp onReady={() => setAwake(true)} />
-      ) : (
-        <AuthProvider>
-          <Root />
-        </AuthProvider>
-      )}
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
