@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ADMIN_DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379/0"
     CORS_ORIGINS: str = "http://localhost:5173"
+    CORS_ORIGIN_REGEX: Optional[str] = None
     FRONTEND_URL: str = "http://localhost:5173"
     STORAGE_ENDPOINT: str = "localhost:9000"
     STORAGE_BUCKET: str = "travel-system"
