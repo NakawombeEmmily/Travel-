@@ -33,6 +33,15 @@ class EncryptionService:
         ciphertext = encrypted[12:]
         return self._aesgcm.decrypt(nonce, ciphertext, None).decode("utf-8")
 
+    def encrypt_bytes(self, data: bytes) -> bytes:
+        nonce = secrets.token_bytes(12)
+        return nonce + self._aesgcm.encrypt(nonce, data, None)
+
+    def decrypt_bytes(self, encrypted: bytes) -> bytes:
+        nonce = encrypted[:12]
+        ciphertext = encrypted[12:]
+        return self._aesgcm.decrypt(nonce, ciphertext, None)
+
     @staticmethod
     def hash_plaintext(plaintext: str) -> str:
         h = hashes.Hash(hashes.SHA256())

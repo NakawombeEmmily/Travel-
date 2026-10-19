@@ -34,7 +34,9 @@ export async function apiFetch<T>(
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> | undefined),
   };
-  if (options.body && !headers["Content-Type"]) {
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (options.body && !isFormData && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
   }
   const token = getAccessToken();
@@ -70,6 +72,25 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
+  upload: <T>(path: string, form: FormData) =>
+    apiFetch<T>(path, { method: "POST", body: form }),
 };
+
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const token = getAccessToken();
+  const res = await fetch(`${API_BASE}/api/v1${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError(res.status, "Download failed");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 export { API_BASE };

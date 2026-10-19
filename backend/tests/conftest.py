@@ -29,6 +29,10 @@ os.environ.setdefault("DATABASE_URL", f"sqlite+aiosqlite:///{_TMP_DB}")
 os.environ.setdefault("DATABASE_URL_DIRECT", f"sqlite+aiosqlite:///{_TMP_DB}")
 os.environ.setdefault("ADMIN_DATABASE_URL", f"sqlite+aiosqlite:///{_TMP_DB}")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+os.environ.setdefault(
+    "STORAGE_LOCAL_DIR",
+    os.path.join(tempfile.gettempdir(), "travel_system_storage"),
+)
 
 from app.api.deps import get_session  # noqa: E402
 from app.core.security.passwords import hash_password  # noqa: E402
@@ -123,6 +127,32 @@ async def auth_headers(
     assert resp.status_code == 200, resp.text
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture()
+async def sample_client(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> dict:
+    existing = await client.get(
+        "/api/v1/clients?q=traveller@example.com", headers=auth_headers
+    )
+    if existing.status_code == 200 and existing.json()["items"]:
+        return existing.json()["items"][0]
+
+    resp = await client.post(
+        "/api/v1/clients",
+        json={
+            "full_name": "Test Traveller",
+            "email": "traveller@example.com",
+            "phone": "+256700000000",
+            "nationality": "Ugandan",
+            "passport_number": "UG1234567",
+            "consent_given": True,
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()
 
 
 __all__ = [

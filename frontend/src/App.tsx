@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ClientsPage } from "@/features/clients/ClientsPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { TripsPage } from "@/features/trips/TripsPage";
+import { VisasPage } from "@/features/visas/VisasPage";
 
 function Protected() {
   const { user, hasToken } = useAuth();
@@ -13,6 +15,8 @@ function Protected() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/clients" element={<ClientsPage />} />
+        <Route path="/trips" element={<TripsPage />} />
+        <Route path="/visas" element={<VisasPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

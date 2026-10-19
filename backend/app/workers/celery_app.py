@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import settings
 
@@ -18,6 +19,12 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     broker_connection_retry_on_startup=True,
+    beat_schedule={
+        "send-reminders-daily": {
+            "task": "tasks.send_reminders",
+            "schedule": crontab(hour=6, minute=0),
+        }
+    },
 )
 
 celery_app.autodiscover_tasks(["app.tasks"])

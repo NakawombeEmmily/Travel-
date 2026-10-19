@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     ALLOW_SELF_REGISTRATION: bool = True
     REGISTRATION_CODE: Optional[str] = None
     REGISTRATION_DEFAULT_ROLE: str = "agent"
+    STORAGE_BACKEND: str = "local"
+    STORAGE_LOCAL_DIR: str = "./storage"
     STORAGE_ENDPOINT: str = "localhost:9000"
     STORAGE_BUCKET: str = "travel-system"
     STORAGE_ACCESS_KEY: str = "minioadmin"
@@ -29,6 +31,8 @@ class Settings(BaseSettings):
     EMAIL_PROVIDER: str = "mailpit"
     EMAIL_FROM: str = "Travel System <noreply@localhost>"
     RESEND_API_KEY: Optional[str] = None
+    REMINDER_EMAIL: Optional[str] = None
+    REMINDER_DAYS: int = 90
     BASE_CURRENCY: str = "UGX"
     LOG_LEVEL: str = "INFO"
 
