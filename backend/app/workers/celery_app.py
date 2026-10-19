@@ -23,7 +23,15 @@ celery_app.conf.update(
         "send-reminders-daily": {
             "task": "tasks.send_reminders",
             "schedule": crontab(hour=6, minute=0),
-        }
+        },
+        "process-payment-outbox": {
+            "task": "tasks.process_outbox",
+            "schedule": 60.0,
+        },
+        "reconcile-payments-nightly": {
+            "task": "tasks.reconcile_payments",
+            "schedule": crontab(hour=2, minute=0),
+        },
     },
 )
 

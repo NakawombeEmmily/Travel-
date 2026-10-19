@@ -10,6 +10,17 @@ from app.models.interaction import Interaction, InteractionType
 from app.models.lead import Lead, LeadStatus
 from app.models.tag import ClientTag, Tag
 from app.models.task import FollowUpTask, TaskPriority, TaskStatus
+from app.models.payment import (
+    InstallmentStatus,
+    OutboxStatus,
+    Payment,
+    PaymentInstallment,
+    PaymentMethod,
+    PaymentOutbox,
+    PaymentProviderName,
+    PaymentStatus,
+)
+from app.models.admin import AdminInvoice, AdminLedger, AdminRevenueSummary
 
 __all__ = [
     "Base",
@@ -36,4 +47,15 @@ __all__ = [
     "FollowUpTask",
     "TaskPriority",
     "TaskStatus",
+    "Payment",
+    "PaymentInstallment",
+    "PaymentOutbox",
+    "PaymentStatus",
+    "PaymentMethod",
+    "PaymentProviderName",
+    "InstallmentStatus",
+    "OutboxStatus",
+    "AdminLedger",
+    "AdminInvoice",
+    "AdminRevenueSummary",
 ]

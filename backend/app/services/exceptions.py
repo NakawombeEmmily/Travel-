@@ -11,3 +11,7 @@ class NotFoundError(Exception):
 
 class ConflictError(Exception):
     """Raised when a unique constraint would be violated."""
+
+
+class PaymentError(Exception):
+    """Raised when a payment cannot be processed as requested."""

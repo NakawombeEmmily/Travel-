@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
-from decimal import Decimal
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +11,7 @@ from app.models.trip import Trip, TripStatus
 from app.models.visa import Visa, VisaStatus
 from app.repositories.feedback import FeedbackRepository
 from app.repositories.lead import LeadRepository
+from app.repositories.payment import PaymentRepository
 from app.repositories.task import TaskRepository
 from app.repositories.trip import TripRepository
 from app.repositories.visa import VisaRepository
@@ -39,6 +39,7 @@ class DashboardService:
         self.feedback = FeedbackRepository(session)
         self.leads = LeadRepository(session)
         self.tasks = TaskRepository(session)
+        self.payments = PaymentRepository(session)
 
     async def _scalar(self, stmt) -> int:
         return int((await self.session.execute(stmt)).scalar_one())
@@ -93,6 +94,9 @@ class DashboardService:
         )
         upcoming_rows = (await self.session.execute(upcoming_stmt)).all()
 
+        month_start = datetime(today.year, today.month, 1, tzinfo=timezone.utc)
+        revenue_mtd = await self.payments.completed_total_since(month_start)
+
         return DashboardSummary(
             active_clients=active_clients,
             trips_in_progress=trips_by_status.get(
@@ -101,7 +105,7 @@ class DashboardService:
             pending_visas=sum(
                 visas_by_status.get(s, 0) for s in PENDING_VISA_STATUSES
             ),
-            revenue_mtd=Decimal("0.00"),
+            revenue_mtd=revenue_mtd,
             passports_expiring_soon=passports_expiring,
             visas_expiring_soon=visas_expiring,
             trips_by_status=trips_by_status,

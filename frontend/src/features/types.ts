@@ -256,3 +256,112 @@ export interface TaskStats {
   overdue: number;
   due_soon: number;
 }
+
+export type PaymentStatus =
+  | "pending"
+  | "completed"
+  | "failed"
+  | "refunded"
+  | "partial";
+
+export type PaymentMethod =
+  | "card"
+  | "mobile_money"
+  | "bank_transfer"
+  | "cash";
+
+export interface PaymentInstallment {
+  id: string;
+  payment_id: string;
+  amount: string;
+  due_date?: string | null;
+  paid_at?: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface Payment {
+  id: string;
+  client_id: string;
+  client_name?: string | null;
+  trip_id?: string | null;
+  amount: string;
+  currency: string;
+  exchange_rate: string;
+  method: string;
+  provider: string;
+  provider_transaction_id?: string | null;
+  status: string;
+  paid_at?: string | null;
+  invoice_number?: string | null;
+  notes?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  installments: PaymentInstallment[];
+}
+
+export interface PaymentListResponse {
+  items: Payment[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface PaymentStats {
+  count: number;
+  by_status: Record<string, number>;
+  total_collected: string;
+  outstanding: string;
+}
+
+export interface OutboxEvent {
+  id: string;
+  event_id: string;
+  aggregate_type: string;
+  aggregate_id: string;
+  event_type: string;
+  status: string;
+  attempts: number;
+  max_attempts: number;
+  last_attempt_at?: string | null;
+  next_attempt_at?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  processed_at?: string | null;
+}
+
+export interface OutboxListResponse {
+  items: OutboxEvent[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface OutboxProcessResult {
+  processed: number;
+  completed: number;
+  failed: number;
+  pending: number;
+}
+
+export interface ReconcileResult {
+  checked: number;
+  created: number;
+  updated: number;
+  mismatched: number;
+  errors: string[];
+}
+
+export interface RevenueSummary {
+  id: string;
+  summary_date: string;
+  period_type: string;
+  total_amount: string;
+  currency: string;
+  transaction_count: number;
+  completed_count: number;
+  failed_count: number;
+  refunded_count: number;
+  created_at: string;
+}

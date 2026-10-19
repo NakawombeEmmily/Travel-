@@ -74,6 +74,19 @@
     color: #fff7ed;
   }
 
+  .btn-secondary {
+    background-color: var(--surface-elevated);
+    color: var(--text);
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    transition: background-color 0.15s ease-in-out;
+  }
+  .btn-secondary:hover {
+    background-color: var(--primary-50);
+  }
+
   .card {
     background-color: var(--surface-elevated);
     border: 1px solid var(--border);

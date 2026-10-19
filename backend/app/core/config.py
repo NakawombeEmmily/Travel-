@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     REMINDER_EMAIL: Optional[str] = None
     REMINDER_DAYS: int = 90
     BASE_CURRENCY: str = "UGX"
+    PAYMENT_PROVIDER: str = "mock"
+    INVOICE_DUE_DAYS: int = 14
+    OUTBOX_MAX_ATTEMPTS: int = 10
     LOG_LEVEL: str = "INFO"
 
     class Config:
