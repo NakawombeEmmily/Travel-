@@ -365,3 +365,68 @@ export interface RevenueSummary {
   refunded_count: number;
   created_at: string;
 }
+
+export interface BreakdownItem {
+  label: string;
+  count: number;
+}
+
+export interface RatingDistribution {
+  count: number;
+  average: number;
+  distribution: Record<string, number>;
+}
+
+export interface ConversionMetrics {
+  total_leads: number;
+  won: number;
+  lost: number;
+  open: number;
+  conversion_rate: number;
+}
+
+export interface VisaMetrics {
+  total: number;
+  approved: number;
+  rejected: number;
+  decided: number;
+  approval_rate: number;
+  by_status: Record<string, number>;
+}
+
+export interface CurrencyRevenue {
+  currency: string;
+  total: string;
+  count: number;
+}
+
+export interface AnalyticsSummary {
+  total_clients: number;
+  total_trips: number;
+  ratings: RatingDistribution;
+  conversion: ConversionMetrics;
+  visas: VisaMetrics;
+  nationalities: BreakdownItem[];
+  revenue_by_currency: CurrencyRevenue[];
+  trips_by_status: Record<string, number>;
+  feedback_by_sentiment: Record<string, number>;
+  feedback_by_category: Record<string, number>;
+  generated_at: string;
+}
+
+export interface TrendPoint {
+  month: string;
+  clients: number;
+  leads: number;
+  payments: number;
+  revenue: string;
+  feedback: number;
+}
+
+export type CsvDataset =
+  | "clients"
+  | "trips"
+  | "visas"
+  | "leads"
+  | "feedback"
+  | "payments";

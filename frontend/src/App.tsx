@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
+import { AnalyticsPage } from "@/features/analytics/AnalyticsPage";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ClientsPage } from "@/features/clients/ClientsPage";
@@ -27,6 +28,7 @@ function Protected() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/crm" element={<CrmPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

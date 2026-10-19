@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    analytics,
     auth,
     clients,
     dashboard,
@@ -32,5 +33,6 @@ api_router.include_router(leads.router)
 api_router.include_router(tags.router)
 api_router.include_router(tasks.router)
 api_router.include_router(payments.router)
+api_router.include_router(analytics.router)
 api_router.include_router(dashboard.router)
 api_router.include_router(reminders.router)
