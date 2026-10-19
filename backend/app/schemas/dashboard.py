@@ -26,3 +26,10 @@ class DashboardSummary(BaseModel):
     trips_by_status: dict[str, int]
     visas_by_status: dict[str, int]
     upcoming_departures: list[UpcomingDeparture]
+    feedback_count: int = 0
+    feedback_average: float = 0.0
+    feedback_by_sentiment: dict[str, int] = {}
+    open_leads: int = 0
+    leads_by_status: dict[str, int] = {}
+    open_tasks: int = 0
+    overdue_tasks: int = 0

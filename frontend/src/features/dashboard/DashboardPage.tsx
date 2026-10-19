@@ -33,6 +33,10 @@ export function DashboardPage() {
         { label: "Active Clients", value: data.active_clients },
         { label: "Trips in Progress", value: data.trips_in_progress },
         { label: "Pending Visas", value: data.pending_visas },
+        { label: "Open Leads", value: data.open_leads },
+        { label: "Open Tasks", value: data.open_tasks },
+        { label: "Overdue Tasks", value: data.overdue_tasks },
+        { label: "Avg Rating", value: data.feedback_average.toFixed(1) },
         { label: "Revenue (MTD)", value: data.revenue_mtd },
       ]
     : [];
@@ -73,6 +77,41 @@ export function DashboardPage() {
               <span className="text-xl font-semibold">
                 {data.visas_expiring_soon}
               </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="card p-5">
+              <div className="mb-3 text-sm font-medium">Feedback sentiment</div>
+              {Object.keys(data.feedback_by_sentiment).length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">No feedback yet</p>
+              ) : (
+                <ul className="space-y-1 text-sm">
+                  {Object.entries(data.feedback_by_sentiment).map(([k, v]) => (
+                    <li key={k} className="flex justify-between capitalize">
+                      <span className="text-[var(--text-muted)]">{k}</span>
+                      <span className="font-medium">{v}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="card p-5">
+              <div className="mb-3 text-sm font-medium">Lead pipeline</div>
+              {Object.keys(data.leads_by_status).length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">No leads yet</p>
+              ) : (
+                <ul className="space-y-1 text-sm">
+                  {Object.entries(data.leads_by_status).map(([k, v]) => (
+                    <li key={k} className="flex justify-between capitalize">
+                      <span className="text-[var(--text-muted)]">
+                        {k.replace("_", " ")}
+                      </span>
+                      <span className="font-medium">{v}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 

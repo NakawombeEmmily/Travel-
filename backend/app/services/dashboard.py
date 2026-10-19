@@ -7,8 +7,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.client import Client
+from app.models.lead import LeadStatus
 from app.models.trip import Trip, TripStatus
 from app.models.visa import Visa, VisaStatus
+from app.repositories.feedback import FeedbackRepository
+from app.repositories.lead import LeadRepository
+from app.repositories.task import TaskRepository
 from app.repositories.trip import TripRepository
 from app.repositories.visa import VisaRepository
 from app.schemas.dashboard import DashboardSummary, UpcomingDeparture
@@ -19,12 +23,22 @@ PENDING_VISA_STATUSES = {
     VisaStatus.in_review.value,
 }
 
+OPEN_LEAD_STATUSES = {
+    LeadStatus.lead.value,
+    LeadStatus.contacted.value,
+    LeadStatus.quote_sent.value,
+    LeadStatus.negotiation.value,
+}
+
 
 class DashboardService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.trips = TripRepository(session)
         self.visas = VisaRepository(session)
+        self.feedback = FeedbackRepository(session)
+        self.leads = LeadRepository(session)
+        self.tasks = TaskRepository(session)
 
     async def _scalar(self, stmt) -> int:
         return int((await self.session.execute(stmt)).scalar_one())
@@ -61,6 +75,12 @@ class DashboardService:
         trips_by_status = await self.trips.counts_by_status()
         visas_by_status = await self.visas.counts_by_status()
 
+        feedback_count, feedback_average = await self.feedback.average_rating()
+        feedback_by_sentiment = await self.feedback.counts_by_sentiment()
+        leads_by_status = await self.leads.counts_by_status()
+        open_tasks = await self.tasks.open_count()
+        overdue_tasks = await self.tasks.overdue_count(today)
+
         upcoming_stmt = (
             select(Trip, Client.full_name)
             .join(Client, Trip.client_id == Client.id)
@@ -96,4 +116,13 @@ class DashboardService:
                 )
                 for trip, name in upcoming_rows
             ],
+            feedback_count=feedback_count,
+            feedback_average=round(feedback_average, 2),
+            feedback_by_sentiment=feedback_by_sentiment,
+            open_leads=sum(
+                leads_by_status.get(s, 0) for s in OPEN_LEAD_STATUSES
+            ),
+            leads_by_status=leads_by_status,
+            open_tasks=open_tasks,
+            overdue_tasks=overdue_tasks,
         )

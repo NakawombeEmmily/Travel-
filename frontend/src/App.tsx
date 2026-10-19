@@ -3,7 +3,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ClientsPage } from "@/features/clients/ClientsPage";
+import { CrmPage } from "@/features/crm/CrmPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { FeedbackPage } from "@/features/feedback/FeedbackPage";
+import { PipelinePage } from "@/features/pipeline/PipelinePage";
+import { TasksPage } from "@/features/tasks/TasksPage";
 import { TripsPage } from "@/features/trips/TripsPage";
 import { VisasPage } from "@/features/visas/VisasPage";
 
@@ -17,6 +21,10 @@ function Protected() {
         <Route path="/clients" element={<ClientsPage />} />
         <Route path="/trips" element={<TripsPage />} />
         <Route path="/visas" element={<VisasPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/pipeline" element={<PipelinePage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/crm" element={<CrmPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

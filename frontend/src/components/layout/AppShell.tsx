@@ -9,9 +9,11 @@ const navItems = [
   { to: "/clients", label: "Clients" },
   { to: "/trips", label: "Trips" },
   { to: "/visas", label: "Visas" },
-  { to: "/payments", label: "Payments" },
-  { to: "/feedback", label: "Feedback" },
   { to: "/pipeline", label: "Pipeline" },
+  { to: "/tasks", label: "Tasks" },
+  { to: "/crm", label: "CRM" },
+  { to: "/feedback", label: "Feedback" },
+  { to: "/payments", label: "Payments" },
   { to: "/analytics", label: "Analytics" },
 ];
 

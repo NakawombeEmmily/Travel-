@@ -118,4 +118,141 @@ export interface DashboardSummary {
   trips_by_status: Record<string, number>;
   visas_by_status: Record<string, number>;
   upcoming_departures: UpcomingDeparture[];
+  feedback_count: number;
+  feedback_average: number;
+  feedback_by_sentiment: Record<string, number>;
+  open_leads: number;
+  leads_by_status: Record<string, number>;
+  open_tasks: number;
+  overdue_tasks: number;
+}
+
+export type Sentiment = "positive" | "neutral" | "negative" | "mixed";
+
+export type FeedbackCategory =
+  | "service"
+  | "price"
+  | "visa_support"
+  | "communication";
+
+export interface Feedback {
+  id: string;
+  client_id: string;
+  client_name?: string | null;
+  trip_id?: string | null;
+  rating: number;
+  comment?: string | null;
+  category?: string | null;
+  sentiment: string;
+  feedback_date: string;
+  created_at: string;
+}
+
+export interface FeedbackListResponse {
+  items: Feedback[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface FeedbackStats {
+  count: number;
+  average_rating: number;
+  by_sentiment: Record<string, number>;
+  by_category: Record<string, number>;
+}
+
+export type InteractionType =
+  | "call"
+  | "email"
+  | "whatsapp"
+  | "meeting"
+  | "other";
+
+export interface Interaction {
+  id: string;
+  client_id: string;
+  client_name?: string | null;
+  interaction_type: string;
+  notes?: string | null;
+  follow_up_date?: string | null;
+  contacted_by?: string | null;
+  created_at: string;
+}
+
+export interface InteractionListResponse {
+  items: Interaction[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export type LeadStatus =
+  | "lead"
+  | "contacted"
+  | "quote_sent"
+  | "negotiation"
+  | "won"
+  | "lost";
+
+export interface Lead {
+  id: string;
+  client_id?: string | null;
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  source?: string | null;
+  status: string;
+  assigned_to?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeadListResponse {
+  items: Lead[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface TagListResponse {
+  items: Tag[];
+}
+
+export type TaskStatus = "pending" | "in_progress" | "completed" | "cancelled";
+
+export type TaskPriority = "low" | "medium" | "high";
+
+export interface Task {
+  id: string;
+  client_id: string;
+  client_name?: string | null;
+  title: string;
+  description?: string | null;
+  assigned_to?: string | null;
+  due_date?: string | null;
+  status: string;
+  priority: string;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskListResponse {
+  items: Task[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface TaskStats {
+  open: number;
+  overdue: number;
+  due_soon: number;
 }
