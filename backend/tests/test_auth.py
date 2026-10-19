@@ -48,6 +48,48 @@ async def test_me(client: AsyncClient, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
+async def test_register_creates_account_and_logs_in(client: AsyncClient) -> None:
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "newagent@example.com",
+            "full_name": "New Agent",
+            "password": "StrongPass123",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert "access_token" in body
+    assert "refresh_token" in body
+
+
+@pytest.mark.asyncio
+async def test_register_duplicate_email(client: AsyncClient, admin_user) -> None:
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": admin_user.email,
+            "full_name": "Duplicate",
+            "password": "StrongPass123",
+        },
+    )
+    assert resp.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_register_rejects_short_password(client: AsyncClient) -> None:
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "short@example.com",
+            "full_name": "Short Pass",
+            "password": "short",
+        },
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_refresh(client: AsyncClient, admin_user) -> None:
     login = await client.post(
         "/api/v1/auth/login",

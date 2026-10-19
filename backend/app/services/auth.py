@@ -6,13 +6,13 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security.passwords import verify_password
+from app.core.security.passwords import hash_password, verify_password
 from app.core.security.tokens import (
     create_access_token,
     create_refresh_token,
     decode_refresh_token,
 )
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.repositories.user import UserRepository
 
 
@@ -27,6 +27,21 @@ class AuthService:
         if not verify_password(password, user.password_hash):
             return None
         user.last_login_at = datetime.now(timezone.utc)
+        await self.repo.session.flush()
+        return user
+
+    async def register(
+        self, *, email: str, full_name: str, password: str, role: UserRole
+    ) -> User:
+        user = User(
+            email=email.lower(),
+            full_name=full_name.strip(),
+            password_hash=hash_password(password),
+            role=role,
+            is_active=True,
+            assigned_clients_only=False,
+        )
+        self.repo.session.add(user)
         await self.repo.session.flush()
         return user
 

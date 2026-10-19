@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173"
     CORS_ORIGIN_REGEX: Optional[str] = None
     FRONTEND_URL: str = "http://localhost:5173"
+    ALLOW_SELF_REGISTRATION: bool = True
+    REGISTRATION_CODE: Optional[str] = None
+    REGISTRATION_DEFAULT_ROLE: str = "agent"
     STORAGE_ENDPOINT: str = "localhost:9000"
     STORAGE_BUCKET: str = "travel-system"
     STORAGE_ACCESS_KEY: str = "minioadmin"

@@ -4,8 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_client_ip, get_current_user, get_session
-from app.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, TokenPair, UserRead
+from app.core.config import settings
+from app.models.user import User, UserRole
+from app.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    TokenPair,
+    UserRead,
+)
 from app.services.audit import record_audit
 from app.services.auth import AuthService
 
@@ -44,6 +51,55 @@ async def login(
         metadata={"success": True},
     )
     await session.commit()
+    return TokenPair(access_token=access, refresh_token=refresh)
+
+
+@router.post(
+    "/register", response_model=TokenPair, status_code=status.HTTP_201_CREATED
+)
+async def register(
+    payload: RegisterRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> TokenPair:
+    if not settings.ALLOW_SELF_REGISTRATION:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Self-registration is disabled",
+        )
+    if settings.REGISTRATION_CODE and (
+        payload.registration_code != settings.REGISTRATION_CODE
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid registration code",
+        )
+
+    service = AuthService(session)
+    if await service.repo.get_by_email(str(payload.email)) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists",
+        )
+
+    role = UserRole(settings.REGISTRATION_DEFAULT_ROLE)
+    user = await service.register(
+        email=str(payload.email),
+        full_name=payload.full_name,
+        password=payload.password,
+        role=role,
+    )
+    await record_audit(
+        session,
+        action="register",
+        entity_type="user",
+        actor_id=user.id,
+        entity_id=user.id,
+        ip_address=get_client_ip(request),
+        metadata={"email": user.email, "role": role.value},
+    )
+    await session.commit()
+    access, refresh = await service.issue_tokens(user)
     return TokenPair(access_token=access, refresh_token=refresh)
 
 
