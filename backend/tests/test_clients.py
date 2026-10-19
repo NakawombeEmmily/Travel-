@@ -42,10 +42,11 @@ async def test_create_client_encrypts_passport(
     assert body["passport_number_masked"].count("*") >= 3
     assert "passport_number" not in body
 
+    from uuid import UUID
+
     from sqlalchemy import select
 
     from app.models.client import Client
-    from uuid import UUID
 
     row = (
         await session.execute(

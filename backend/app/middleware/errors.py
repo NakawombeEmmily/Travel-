@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -41,7 +42,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
 
-def _safe_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _safe_errors(errors: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     cleaned = []
     for err in errors:
         cleaned.append(

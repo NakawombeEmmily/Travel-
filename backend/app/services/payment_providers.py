@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from decimal import Decimal
-import uuid
+from typing import Any
 
 from app.core.config import settings
 
@@ -18,7 +19,7 @@ class PaymentResult:
     status: str
     provider_transaction_id: str | None = None
     message: str | None = None
-    raw: dict = field(default_factory=dict)
+    raw: dict[str, Any] = field(default_factory=dict)
 
 
 class PaymentProvider(ABC):
@@ -34,7 +35,7 @@ class PaymentProvider(ABC):
         currency: str,
         method: str,
         reference: str,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PaymentResult:
         raise NotImplementedError
 
@@ -61,7 +62,7 @@ class MockPaymentProvider(PaymentProvider):
         currency: str,
         method: str,
         reference: str,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PaymentResult:
         return PaymentResult(
             success=True,
@@ -90,12 +91,26 @@ class MockPaymentProvider(PaymentProvider):
 class _UnconfiguredProvider(PaymentProvider):
     """Stub for real providers that are not yet configured."""
 
-    def charge(self, *, amount, currency, method, reference, metadata=None):
+    def charge(
+        self,
+        *,
+        amount: Decimal,
+        currency: str,
+        method: str,
+        reference: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> PaymentResult:
         raise PaymentProviderError(
             f"{self.name} provider is not configured yet"
         )
 
-    def refund(self, *, provider_transaction_id, amount, currency):
+    def refund(
+        self,
+        *,
+        provider_transaction_id: str,
+        amount: Decimal,
+        currency: str,
+    ) -> PaymentResult:
         raise PaymentProviderError(
             f"{self.name} provider is not configured yet"
         )

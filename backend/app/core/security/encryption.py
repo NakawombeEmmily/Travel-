@@ -1,7 +1,8 @@
-﻿from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives import hashes
-import base64
+﻿import base64
 import secrets
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 class EncryptionService:

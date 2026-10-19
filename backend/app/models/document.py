@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Boolean, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -32,6 +32,6 @@ class Document(Base):
         UUID(as_uuid=True), nullable=True
     )
     uploaded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)

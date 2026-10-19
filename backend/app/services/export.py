@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Awaitable, Callable
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Callable
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -159,8 +160,16 @@ async def _leads(session: AsyncSession) -> tuple[list[str], list[list[Any]]]:
         "created_at",
     ]
     data = [
-        [l.id, l.full_name, l.email, l.phone, l.source, l.status, l.created_at]
-        for l in rows
+        [
+            lead.id,
+            lead.full_name,
+            lead.email,
+            lead.phone,
+            lead.source,
+            lead.status,
+            lead.created_at,
+        ]
+        for lead in rows
     ]
     return headers, data
 
@@ -223,7 +232,11 @@ async def _payments(session: AsyncSession) -> tuple[list[str], list[list[Any]]]:
     return headers, data
 
 
-_BUILDERS: dict[str, Callable] = {
+ExportBuilder = Callable[
+    [AsyncSession], Awaitable[tuple[list[str], list[list[Any]]]]
+]
+
+_EXPORT_BUILDERS: dict[str, ExportBuilder] = {
     "clients": _clients,
     "trips": _trips,
     "visas": _visas,
@@ -236,7 +249,7 @@ _BUILDERS: dict[str, Callable] = {
 async def export_dataset(
     session: AsyncSession, dataset: str
 ) -> tuple[str, bytes]:
-    builder = _BUILDERS.get(dataset)
+    builder = _EXPORT_BUILDERS.get(dataset)
     if builder is None:
         raise NotFoundError(f"Unknown dataset: {dataset}")
     headers, data = await builder(session)

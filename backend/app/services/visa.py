@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -94,7 +94,7 @@ class VisaService:
 
         for key, value in data.items():
             setattr(visa, key, value)
-        visa.updated_at = datetime.now(timezone.utc)
+        visa.updated_at = datetime.now(UTC)
         await self.session.flush()
         return visa
 

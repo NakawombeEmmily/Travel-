@@ -49,8 +49,8 @@ async def create_trip(
     service = TripService(session)
     try:
         trip = await service.create(payload, actor_id=user.id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Client not found") from exc
     await record_audit(
         session,
         action="create",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -85,8 +85,11 @@ class AdminInvoiceRepository(BaseRepository[AdminInvoice]):
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def list_all(self) -> list[AdminInvoice]:
-        stmt = select(AdminInvoice).order_by(AdminInvoice.created_at.desc())
+    async def list_all(self, **filters: Any) -> list[AdminInvoice]:
+        stmt = select(AdminInvoice)
+        for key, value in filters.items():
+            stmt = stmt.where(getattr(AdminInvoice, key) == value)
+        stmt = stmt.order_by(AdminInvoice.created_at.desc())
         return list((await self.session.execute(stmt)).scalars().all())
 
 

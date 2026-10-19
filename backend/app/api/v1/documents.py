@@ -98,8 +98,8 @@ async def download_document(
     service = _service(session, encryption)
     try:
         document, data = await service.read(document_id)
-    except DocumentNotFoundError:
-        raise HTTPException(status_code=404, detail="Document not found")
+    except DocumentNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Document not found") from exc
     await record_audit(
         session,
         action="download",
@@ -127,8 +127,8 @@ async def delete_document(
     service = _service(session, encryption)
     try:
         await service.delete(document_id)
-    except DocumentNotFoundError:
-        raise HTTPException(status_code=404, detail="Document not found")
+    except DocumentNotFoundError as err:
+        raise HTTPException(status_code=404, detail="Document not found") from err
     await record_audit(
         session,
         action="delete",

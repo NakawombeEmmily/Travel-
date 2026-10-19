@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import io
 from uuid import UUID
 
@@ -53,10 +54,8 @@ async def _get_or_404(session: AsyncSession, payment_id: UUID) -> Payment:
 
 
 async def _flush_outbox(session: AsyncSession, payment_id: UUID) -> None:
-    try:
+    with contextlib.suppress(Exception):
         await OutboxService(session).process_for_payment(payment_id)
-    except Exception:  # noqa: BLE001 - retries handled by the worker
-        pass
     await session.commit()
 
 
@@ -195,12 +194,12 @@ async def create_payment(
     service = PaymentService(session)
     try:
         payment = await service.create(payload, actor_id=user.id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as err:
+        raise HTTPException(status_code=404, detail="Client not found") from err
     except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (PaymentError, PaymentProviderError) as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await record_audit(
         session,
         action="create",
@@ -222,8 +221,8 @@ async def get_payment(
 ) -> PaymentRead:
     try:
         return await PaymentService(session).get_read(payment_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Payment not found")
+    except NotFoundError as exc1:
+        raise HTTPException(status_code=404, detail="Payment not found") from exc1
 
 
 @router.patch("/{payment_id}", response_model=PaymentRead)
@@ -259,7 +258,7 @@ async def refund_payment(
     try:
         payment = await service.refund(payment)
     except PaymentError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await record_audit(
         session,
         action="refund",
@@ -291,9 +290,9 @@ async def pay_installment(
     try:
         record = await service.pay_installment(payment, installment)
     except ConflictError as exc:
-        raise HTTPException(status_code=409, detail=str(exc))
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except PaymentError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await record_audit(
         session,
         action="installment_payment",
@@ -316,8 +315,8 @@ async def download_invoice(
     service = PaymentService(session)
     try:
         payment, _ = await service.get(payment_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Payment not found")
+    except NotFoundError as err1:
+        raise HTTPException(status_code=404, detail="Payment not found") from err1
 
     ledger = await service.ledger.ledger_repo.get_by_payment(payment.id)
     if ledger is None:
@@ -329,11 +328,18 @@ async def download_invoice(
                 status_code=404, detail="Invoice is not available yet"
             )
         invoice = await service.ledger.ensure_invoice(ledger, payment)
+    if invoice.pdf_key is None:
+        await service.ledger.write_invoice_pdf(invoice, payment)
+    pdf_key = invoice.pdf_key
+    if pdf_key is None:
+        raise HTTPException(
+            status_code=404, detail="Invoice PDF is not available yet"
+        )
     try:
-        data = service.storage.read(invoice.pdf_key)
+        data = service.storage.read(pdf_key)
     except FileNotFoundError:
         await service.ledger.write_invoice_pdf(invoice, payment)
-        data = service.storage.read(invoice.pdf_key)
+        data = service.storage.read(pdf_key)
     await record_audit(
         session,
         action="download",

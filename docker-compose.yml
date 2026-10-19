@@ -77,7 +77,7 @@ services:
     volumes:
       - ./backend:/app
     command: >
-      sh -c "celery -A app.workers.celery_app.celery_app worker -l info --concurrency=2"
+      sh -c "celery -A app.workers.celery_app.celery_app worker -l info --concurrency=2 --beat"
 
   frontend:
     image: node:20-alpine

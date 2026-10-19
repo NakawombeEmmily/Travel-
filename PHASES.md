@@ -1,6 +1,8 @@
 # Travel System - Phases Overview
 
-## Phase 1: Setup, Core Foundation & App Shell (CURRENT)
+All six phases are delivered; see the status table in [README.md](README.md).
+
+## Phase 1: Setup, Core Foundation & App Shell
 **Focus**: Scaffolding, Neon config, auth+RBAC, clients, audit log, theme tokens, logo, app shell
 
 ## Phase 2: Trips, Visas, Documents, Reminders

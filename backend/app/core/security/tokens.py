@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional, cast
 
 from jose import JWTError, jwt
 
@@ -15,14 +15,14 @@ def create_access_token(
     role: str,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
+    expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=15))
     payload: dict[str, Any] = {
         "sub": subject,
         "role": role,
         "type": "access",
         "exp": expire,
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM)
+    return cast(str, jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM))
 
 
 def create_refresh_token(
@@ -30,22 +30,30 @@ def create_refresh_token(
     role: str,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(days=7))
+    expire = datetime.now(UTC) + (expires_delta or timedelta(days=7))
     payload: dict[str, Any] = {
         "sub": subject,
         "role": role,
         "type": "refresh",
         "exp": expire,
     }
-    return jwt.encode(payload, settings.JWT_REFRESH_SECRET, algorithm=ALGORITHM)
+    return cast(
+        str, jwt.encode(payload, settings.JWT_REFRESH_SECRET, algorithm=ALGORITHM)
+    )
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    return jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM])
+    return cast(
+        dict[str, Any],
+        jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM]),
+    )
 
 
 def decode_refresh_token(token: str) -> dict[str, Any]:
-    return jwt.decode(token, settings.JWT_REFRESH_SECRET, algorithms=[ALGORITHM])
+    return cast(
+        dict[str, Any],
+        jwt.decode(token, settings.JWT_REFRESH_SECRET, algorithms=[ALGORITHM]),
+    )
 
 
 __all__ = [

@@ -6,7 +6,9 @@ import os
 import sys
 from datetime import date
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend")
+)
 
 from app.core.config import settings
 from app.core.security.encryption import EncryptionService

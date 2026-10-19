@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
 from sqlalchemy import select
@@ -11,7 +11,7 @@ from app.db.base import Base
 ModelT = TypeVar("ModelT", bound=Base)
 
 
-class BaseRepository(Generic[ModelT]):
+class BaseRepository[ModelT: Base]:
     model: type[ModelT]
 
     def __init__(self, session: AsyncSession) -> None:

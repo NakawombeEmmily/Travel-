@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from enum import Enum
 import uuid
+from datetime import UTC, date, datetime
+from enum import StrEnum
 
 from sqlalchemy import Date, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class VisaStatus(str, Enum):
+class VisaStatus(StrEnum):
     not_required = "not_required"
     not_started = "not_started"
     documents_pending = "documents_pending"
@@ -45,12 +45,12 @@ class Visa(Base):
     expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
@@ -71,6 +71,6 @@ class VisaStatusHistory(Base):
         UUID(as_uuid=True), nullable=True
     )
     changed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     note: Mapped[str | None] = mapped_column(Text, nullable=True)

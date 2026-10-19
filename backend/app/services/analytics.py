@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 from app.models.admin import AdminRevenueSummary
 from app.models.client import Client
@@ -61,7 +62,7 @@ class AnalyticsService:
         self.trips = TripRepository(session)
         self.visas = VisaRepository(session)
 
-    async def _count(self, stmt) -> int:
+    async def _count(self, stmt: Select[Any]) -> int:
         return int((await self.session.execute(stmt)).scalar_one())
 
     async def _rating_distribution(self) -> RatingDistribution:
@@ -170,22 +171,23 @@ class AnalyticsService:
             trips_by_status=await self.trips.counts_by_status(),
             feedback_by_sentiment=await self.feedback.counts_by_sentiment(),
             feedback_by_category=await self.feedback.counts_by_category(),
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     async def trends(self, months: int = 6) -> list[TrendPoint]:
         months = max(1, min(months, 24))
         keys = _month_keys(months)
-        buckets = {
-            key: {"clients": 0, "leads": 0, "payments": 0, "revenue": Decimal("0.00"), "feedback": 0}
+        counts: dict[str, dict[str, int]] = {
+            key: {"clients": 0, "leads": 0, "payments": 0, "feedback": 0}
             for key in keys
         }
+        revenue: dict[str, Decimal] = {key: Decimal("0.00") for key in keys}
 
         earliest = keys[0]
         start_year, start_month = int(earliest[:4]), int(earliest[5:7])
-        start = datetime(start_year, start_month, 1, tzinfo=timezone.utc)
+        start = datetime(start_year, start_month, 1, tzinfo=UTC)
 
-        async def _bump(field: str, column) -> None:
+        async def _bump(field: str, column: InstrumentedAttribute[datetime]) -> None:
             rows = (
                 await self.session.execute(select(column).where(column >= start))
             ).all()
@@ -193,8 +195,8 @@ class AnalyticsService:
                 if value is None:
                     continue
                 key = _month_key(value)
-                if key in buckets:
-                    buckets[key][field] += 1
+                if key in counts:
+                    counts[key][field] += 1
 
         await _bump("clients", Client.created_at)
         await _bump("leads", Lead.created_at)
@@ -212,23 +214,23 @@ class AnalyticsService:
         ).all()
         for created_at, amount, exchange_rate, status in payment_rows:
             key = _month_key(created_at)
-            if key not in buckets:
+            if key not in counts:
                 continue
-            buckets[key]["payments"] += 1
+            counts[key]["payments"] += 1
             if status == PaymentStatus.completed.value:
                 base = Decimal(str(amount)) * Decimal(str(exchange_rate))
-                buckets[key]["revenue"] += base
+                revenue[key] += base
 
         points: list[TrendPoint] = []
         for key in keys:
-            bucket = buckets[key]
+            bucket = counts[key]
             points.append(
                 TrendPoint(
                     month=key,
                     clients=bucket["clients"],
                     leads=bucket["leads"],
                     payments=bucket["payments"],
-                    revenue=Decimal(bucket["revenue"]).quantize(Decimal("0.01")),
+                    revenue=revenue[key].quantize(Decimal("0.01")),
                     feedback=bucket["feedback"],
                 )
             )

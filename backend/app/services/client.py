@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -77,7 +77,7 @@ class ClientService:
             updated_by=actor_id,
         )
         if payload.consent_given:
-            client.consent_date = datetime.now(timezone.utc)
+            client.consent_date = datetime.now(UTC)
         await self.repo.add(client)
         return client
 
@@ -106,10 +106,10 @@ class ClientService:
             setattr(client, key, value)
 
         if payload.consent_given and client.consent_date is None:
-            client.consent_date = datetime.now(timezone.utc)
+            client.consent_date = datetime.now(UTC)
 
         client.updated_by = actor_id
-        client.updated_at = datetime.now(timezone.utc)
+        client.updated_at = datetime.now(UTC)
         await self.repo.session.flush()
         return client
 
@@ -138,7 +138,7 @@ class ClientService:
         self, client: Client, *, actor_id: Optional[UUID] = None
     ) -> None:
         client.is_deleted = True
-        client.deleted_at = datetime.now(timezone.utc)
+        client.deleted_at = datetime.now(UTC)
         client.deleted_by = actor_id
         await self.repo.session.flush()
 

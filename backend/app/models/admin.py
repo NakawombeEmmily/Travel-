@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
 import uuid
+from datetime import UTC, date, datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     Date,
@@ -41,7 +41,7 @@ class AdminLedger(Base):
     )
     invoice_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     synced_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     last_reconciled_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -63,7 +63,7 @@ class AdminInvoice(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     pdf_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -91,5 +91,5 @@ class AdminRevenueSummary(Base):
     failed_count: Mapped[int] = mapped_column(Integer, default=0)
     refunded_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )

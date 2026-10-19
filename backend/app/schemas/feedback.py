@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.feedback import FeedbackCategory, Sentiment
+from app.models.feedback import FeedbackCategory
 
 
 class FeedbackBase(BaseModel):

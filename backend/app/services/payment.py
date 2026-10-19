@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID, uuid4
@@ -83,7 +83,7 @@ class PaymentService:
             raise NotFoundError("Trip not found")
 
     def _generate_invoice_number(self) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return f"INV-{now:%Y%m}-{uuid4().hex[:6].upper()}"
 
     async def create(
@@ -119,7 +119,7 @@ class PaymentService:
             if not result.success:
                 raise PaymentError(result.message or "Payment was declined")
             status = PaymentStatus.completed.value
-            paid_at = datetime.now(timezone.utc)
+            paid_at = datetime.now(UTC)
             tx_id = result.provider_transaction_id
             invoice_number = self._generate_invoice_number()
 
@@ -172,7 +172,7 @@ class PaymentService:
             raise PaymentError(result.message or "Installment payment declined")
 
         installment.status = InstallmentStatus.paid.value
-        installment.paid_at = datetime.now(timezone.utc)
+        installment.paid_at = datetime.now(UTC)
 
         all_items = await self.installments.list_for_payment(payment.id)
         all_paid = all(
@@ -180,7 +180,7 @@ class PaymentService:
         )
         if all_paid:
             payment.status = PaymentStatus.completed.value
-            payment.paid_at = datetime.now(timezone.utc)
+            payment.paid_at = datetime.now(UTC)
             payment.provider_transaction_id = result.provider_transaction_id
             if not payment.invoice_number:
                 payment.invoice_number = self._generate_invoice_number()
@@ -221,7 +221,7 @@ class PaymentService:
             payment.status == PaymentStatus.completed.value
             and payment.paid_at is None
         ):
-            payment.paid_at = datetime.now(timezone.utc)
+            payment.paid_at = datetime.now(UTC)
         if (
             payment.status == PaymentStatus.completed.value
             and not payment.invoice_number
@@ -281,7 +281,7 @@ class PaymentService:
     async def stats(self) -> PaymentStats:
         by_status = await self.repo.counts_by_status()
         total_collected = await self.repo.completed_total_since(
-            datetime(1970, 1, 1, tzinfo=timezone.utc)
+            datetime(1970, 1, 1, tzinfo=UTC)
         )
         outstanding = await self.repo.outstanding_total()
         return PaymentStats(

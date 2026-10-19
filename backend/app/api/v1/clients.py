@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
-    get_client_ip,
     get_current_user,
     get_encryption_service,
     get_session,
@@ -69,7 +67,7 @@ async def list_clients(
 
 @router.post("", response_model=ClientRead, status_code=status.HTTP_201_CREATED)
 async def create_client(
-    payload: "ClientCreate",
+    payload: ClientCreate,
     session: AsyncSession = Depends(get_session),
     encryption: EncryptionService = Depends(get_encryption_service),
     user: User = Depends(get_current_user),
@@ -77,11 +75,11 @@ async def create_client(
     service = _service(session, encryption)
     try:
         client = await service.create(payload, actor_id=user.id)
-    except DuplicatePassportError:
+    except DuplicatePassportError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A client with this passport number already exists",
-        )
+        ) from exc
     await record_audit(
         session,
         action="create",
@@ -120,7 +118,7 @@ async def get_client(
 @router.patch("/{client_id}", response_model=ClientRead)
 async def update_client(
     client_id: str,
-    payload: "ClientUpdate",
+    payload: ClientUpdate,
     session: AsyncSession = Depends(get_session),
     encryption: EncryptionService = Depends(get_encryption_service),
     user: User = Depends(get_current_user),
@@ -133,11 +131,11 @@ async def update_client(
     service = _service(session, encryption)
     try:
         client = await service.update(client, payload, actor_id=user.id)
-    except DuplicatePassportError:
+    except DuplicatePassportError as err:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A client with this passport number already exists",
-        )
+        ) from err
     await record_audit(
         session,
         action="update",

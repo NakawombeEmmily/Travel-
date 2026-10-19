@@ -2,6 +2,13 @@
 
 This is the **exact hosting sequence** to follow with all required environment variables. Do **not** store secrets in code. Enter all values in each provider dashboard.
 
+> **Status (Phase 6):** historical planning document, kept for the original
+> environment-variable walkthrough. The authoritative guide is
+> [DEPLOYMENT.md](DEPLOYMENT.md). In particular, production no longer runs a
+> Celery worker or Redis: scheduled work runs as Render cron jobs invoking
+> `python -m app.cli`, so the worker/Redis service tables below do not reflect
+> production.
+
 ## 0. Prerequisites
 
 - Git repo: https://github.com/NakawombeEmmily/Travel- (main)

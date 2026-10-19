@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.client import Client
@@ -41,7 +42,7 @@ class DashboardService:
         self.tasks = TaskRepository(session)
         self.payments = PaymentRepository(session)
 
-    async def _scalar(self, stmt) -> int:
+    async def _scalar(self, stmt: Select[Any]) -> int:
         return int((await self.session.execute(stmt)).scalar_one())
 
     async def summary(self) -> DashboardSummary:
@@ -94,7 +95,7 @@ class DashboardService:
         )
         upcoming_rows = (await self.session.execute(upcoming_stmt)).all()
 
-        month_start = datetime(today.year, today.month, 1, tzinfo=timezone.utc)
+        month_start = datetime(today.year, today.month, 1, tzinfo=UTC)
         revenue_mtd = await self.payments.completed_total_since(month_start)
 
         return DashboardSummary(

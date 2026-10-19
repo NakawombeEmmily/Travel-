@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import calendar
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -66,7 +66,7 @@ class LedgerService:
             ledger.provider = payment.provider
             ledger.provider_transaction_id = payment.provider_transaction_id
             ledger.invoice_number = payment.invoice_number
-            ledger.synced_at = datetime.now(timezone.utc)
+            ledger.synced_at = datetime.now(UTC)
             await self.session.flush()
 
         if (
@@ -87,7 +87,7 @@ class LedgerService:
         if existing is not None:
             return existing
 
-        paid_on = payment.paid_at or datetime.now(timezone.utc)
+        paid_on = payment.paid_at or datetime.now(UTC)
         issue_date = paid_on.date()
         due_date = issue_date + timedelta(days=settings.INVOICE_DUE_DAYS)
 

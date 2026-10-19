@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from enum import Enum
 import uuid
+from datetime import UTC, date, datetime
+from enum import StrEnum
 
 from sqlalchemy import Date, DateTime, SmallInteger, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,14 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class FeedbackCategory(str, Enum):
+class FeedbackCategory(StrEnum):
     service = "service"
     price = "price"
     visa_support = "visa_support"
     communication = "communication"
 
 
-class Sentiment(str, Enum):
+class Sentiment(StrEnum):
     positive = "positive"
     neutral = "neutral"
     negative = "negative"
@@ -42,5 +42,5 @@ class Feedback(Base):
     )
     feedback_date: Mapped[date] = mapped_column(Date, default=date.today)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )

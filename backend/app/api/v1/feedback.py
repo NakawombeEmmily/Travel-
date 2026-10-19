@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_session
@@ -65,8 +65,8 @@ async def create_feedback(
     service = FeedbackService(session)
     try:
         item = await service.create(payload, actor_id=user.id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Client not found") from exc
     await record_audit(
         session,
         action="create",

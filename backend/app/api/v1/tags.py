@@ -15,7 +15,6 @@ from app.schemas.tag import (
     TagRead,
     TagUpdate,
 )
-from app.services.audit import record_audit
 from app.services.exceptions import ClientNotFoundError, ConflictError, NotFoundError
 from app.services.tag import TagService
 
@@ -40,7 +39,7 @@ async def create_tag(
     try:
         tag = await service.create(payload)
     except ConflictError as exc:
-        raise HTTPException(status_code=409, detail=str(exc))
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     await session.commit()
     return service.to_read(tag)
 
@@ -64,7 +63,7 @@ async def update_tag(
     try:
         tag = await service.update(tag, payload)
     except ConflictError as exc:
-        raise HTTPException(status_code=409, detail=str(exc))
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     await session.commit()
     return service.to_read(tag)
 
@@ -90,8 +89,8 @@ async def client_tags(
         return ClientTagsResponse(
             items=await TagService(session).tags_for_client(client_id)
         )
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as err:
+        raise HTTPException(status_code=404, detail="Client not found") from err
 
 
 @router.post(
@@ -105,10 +104,10 @@ async def attach_tag(
 ) -> None:
     try:
         await TagService(session).attach(client_id, tag_id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as exc1:
+        raise HTTPException(status_code=404, detail="Client not found") from exc1
     except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     await session.commit()
 
 
@@ -123,8 +122,8 @@ async def detach_tag(
 ) -> None:
     try:
         await TagService(session).detach(client_id, tag_id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as err1:
+        raise HTTPException(status_code=404, detail="Client not found") from err1
     except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     await session.commit()

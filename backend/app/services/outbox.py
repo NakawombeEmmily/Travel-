@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.payment import EventTypes, OutboxStatus, Payment, PaymentOutbox
+from app.models.payment import OutboxStatus, Payment, PaymentOutbox
 from app.repositories.payment import PaymentOutboxRepository, PaymentRepository
 from app.services.ledger import LedgerService
 
@@ -55,13 +55,13 @@ class OutboxService:
 
     async def process(self, event: PaymentOutbox) -> bool:
         """Process a single event. Returns True when it completed."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         event.attempts = (event.attempts or 0) + 1
         event.last_attempt_at = now
         event.status = OutboxStatus.processing.value
         try:
             await self._handle(event)
-        except Exception as exc:  # noqa: BLE001 - captured for retry/dead-letter
+        except Exception as exc:
             event.error_message = str(exc)[:1000]
             if event.attempts >= event.max_attempts:
                 event.status = OutboxStatus.dead_letter.value

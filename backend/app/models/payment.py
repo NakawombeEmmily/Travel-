@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
-from enum import Enum
 import uuid
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -20,7 +21,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(StrEnum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
@@ -28,14 +29,14 @@ class PaymentStatus(str, Enum):
     partial = "partial"
 
 
-class PaymentMethod(str, Enum):
+class PaymentMethod(StrEnum):
     card = "card"
     mobile_money = "mobile_money"
     bank_transfer = "bank_transfer"
     cash = "cash"
 
 
-class PaymentProviderName(str, Enum):
+class PaymentProviderName(StrEnum):
     mock = "mock"
     flutterwave = "flutterwave"
     stripe = "stripe"
@@ -43,13 +44,13 @@ class PaymentProviderName(str, Enum):
     airtel = "airtel"
 
 
-class InstallmentStatus(str, Enum):
+class InstallmentStatus(StrEnum):
     pending = "pending"
     paid = "paid"
     overdue = "overdue"
 
 
-class OutboxStatus(str, Enum):
+class OutboxStatus(StrEnum):
     pending = "pending"
     processing = "processing"
     completed = "completed"
@@ -97,12 +98,12 @@ class Payment(Base):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
@@ -128,7 +129,7 @@ class PaymentInstallment(Base):
         String(20), default=InstallmentStatus.pending.value
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -145,7 +146,7 @@ class PaymentOutbox(Base):
     aggregate_type: Mapped[str] = mapped_column(String(50), default="payment")
     aggregate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    payload: Mapped[dict] = mapped_column(
+    payload: Mapped[dict[str, Any]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=False
     )
     status: Mapped[str] = mapped_column(
@@ -161,7 +162,7 @@ class PaymentOutbox(Base):
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

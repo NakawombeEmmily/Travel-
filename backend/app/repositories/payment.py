@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
@@ -10,12 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.client import Client
 from app.models.payment import (
+    InstallmentStatus,
     OutboxStatus,
     Payment,
     PaymentInstallment,
     PaymentOutbox,
     PaymentStatus,
-    InstallmentStatus,
 )
 from app.repositories.base import BaseRepository
 
@@ -160,7 +160,7 @@ class PaymentOutboxRepository(BaseRepository[PaymentOutbox]):
     async def due(
         self, *, limit: int = 50, now: Optional[datetime] = None
     ) -> list[PaymentOutbox]:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         stmt = (
             select(PaymentOutbox)
             .where(

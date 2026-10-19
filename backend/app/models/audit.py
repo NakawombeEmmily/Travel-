@@ -1,9 +1,12 @@
-﻿from datetime import datetime, timezone
-import uuid
-from sqlalchemy import String, Boolean, DateTime, Date, Text, LargeBinary
-from sqlalchemy.dialects.postgresql import UUID, INET
+﻿import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy import DateTime, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.base import Base
+
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
@@ -17,4 +20,4 @@ class AuditLog(Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[str | None] = mapped_column("metadata", Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

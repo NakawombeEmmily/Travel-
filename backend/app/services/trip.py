@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -54,7 +54,7 @@ class TripService:
             data["purpose"] = data["purpose"].value
         for key, value in data.items():
             setattr(trip, key, value)
-        trip.updated_at = datetime.now(timezone.utc)
+        trip.updated_at = datetime.now(UTC)
         await self.session.flush()
         return trip
 

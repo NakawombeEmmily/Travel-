@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.client import Client
@@ -33,7 +34,7 @@ class ClientRepository(BaseRepository[Client]):
         page_size: int = 20,
         include_deleted: bool = False,
     ) -> tuple[Sequence[Client], int]:
-        conditions = []
+        conditions: list[ColumnElement[bool]] = []
         if not include_deleted:
             conditions.append(Client.is_deleted.is_(False))
         if q:

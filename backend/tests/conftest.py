@@ -4,7 +4,7 @@ import asyncio
 import base64
 import os
 import tempfile
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
@@ -156,9 +156,9 @@ async def sample_client(
 
 
 __all__ = [
-    "app",
     "AuditLog",
     "Client",
     "User",
     "UserRole",
+    "app",
 ]

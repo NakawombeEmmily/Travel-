@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 from typing import Optional
 
@@ -30,10 +31,8 @@ class LocalStorage:
             return fh.read()
 
     def delete(self, key: str) -> None:
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(self._path(key))
-        except FileNotFoundError:
-            pass
 
 
 _storage: Optional[LocalStorage] = None

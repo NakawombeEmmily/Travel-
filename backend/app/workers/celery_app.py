@@ -20,9 +20,11 @@ celery_app.conf.update(
     task_track_started=True,
     broker_connection_retry_on_startup=True,
     beat_schedule={
+        # Mirrors the render.yaml crons so local and production schedules match:
+        # 09:00 UTC daily reminders, every-5-minute outbox, 02:00 UTC reconciliation.
         "send-reminders-daily": {
             "task": "tasks.send_reminders",
-            "schedule": crontab(hour=6, minute=0),
+            "schedule": crontab(hour=9, minute=0),
         },
         "process-payment-outbox": {
             "task": "tasks.process_outbox",

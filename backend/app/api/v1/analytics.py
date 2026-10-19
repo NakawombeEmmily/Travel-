@@ -74,7 +74,7 @@ async def export_csv(
     try:
         filename, data = await export_dataset(session, dataset)
     except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return StreamingResponse(
         io.BytesIO(data),
         media_type="text/csv; charset=utf-8",

@@ -13,8 +13,7 @@ async def test_analytics_summary_shape(
     resp = await client.get("/api/v1/analytics/summary", headers=auth_headers)
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert set(
-        [
+    assert {
             "total_clients",
             "total_trips",
             "ratings",
@@ -25,8 +24,7 @@ async def test_analytics_summary_shape(
             "trips_by_status",
             "feedback_by_sentiment",
             "generated_at",
-        ]
-    ).issubset(body.keys())
+        }.issubset(body.keys())
     assert body["total_clients"] >= 1
     assert "distribution" in body["ratings"]
     assert "conversion_rate" in body["conversion"]
@@ -62,7 +60,7 @@ async def test_analytics_trends_months(
     months = [p["month"] for p in points]
     assert months == sorted(months)
     assert all(
-        set(["month", "clients", "leads", "payments", "revenue", "feedback"])
+        {"month", "clients", "leads", "payments", "revenue", "feedback"}
         == set(p.keys())
         for p in points
     )

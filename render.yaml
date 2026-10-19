@@ -1,6 +1,17 @@
-# Render blueprint — API, worker, and cron jobs.
-# Provision Neon (pooled + direct URLs), Render Key Value (Redis), R2, Resend first,
-# then set the environment variables below in the Render dashboard.
+# Render blueprint — API plus the scheduled jobs the API does not run in-process.
+#
+# Background work (transactional outbox flushing, reminder emails, payment
+# reconciliation) runs as Render cron jobs invoking `python -m app.cli`, so no
+# Celery worker and no Redis are deployed. Local development keeps Celery
+# (worker + beat) through docker-compose.yml.
+#
+# Secrets are never stored in this file:
+#   * `sync: false` — value is typed once in the Render dashboard.
+#   * `generateValue: true` — Render mints the value on first creation.
+#   * Cron jobs inherit everything from the API service via `fromService.envVarKey`.
+#
+# Removing the worker and Redis here means a blueprint sync deletes those two
+# Render services if they were blueprint-managed.
 
 services:
   - type: web
@@ -14,17 +25,14 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: DATABASE_URL
-        sync: false # Neon pooled URL
+        sync: false # Neon pooled URL (must be ?ssl=require, never ?sslmode=)
       - key: DATABASE_URL_DIRECT
-        sync: false # Neon direct URL (used by Alembic)
+        sync: false # Neon direct URL, used by Alembic
       - key: ADMIN_DATABASE_URL
         sync: false
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: travel-system-redis
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET
@@ -32,11 +40,13 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: ENCRYPTION_KEY
-        sync: false # base64 32-byte key
+        sync: false # base64 32-byte key; never rotate once real data exists
       - key: CORS_ORIGINS
-        sync: false # Vercel domain(s)
+        sync: false # Vercel domain(s), comma separated
       - key: FRONTEND_URL
         sync: false
+      - key: STORAGE_BACKEND
+        value: local
       - key: STORAGE_ENDPOINT
         sync: false
       - key: STORAGE_BUCKET
@@ -51,94 +61,289 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      - key: PAYMENT_PROVIDER
+        value: mock
       - key: BASE_CURRENCY
         value: UGX
 
-  - type: worker
-    name: travel-system-worker
+  # Cron jobs build the same image as the API and only override the command.
+  # `dockerCommand` is the documented override for runtime: docker; `startCommand`
+  # is set to the identical value so either field Render honours is correct.
+  - type: cron
+    name: travel-system-outbox-sync
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile.worker
+    dockerfilePath: ./backend/Dockerfile.api
     dockerContext: .
     plan: starter
+    schedule: "*/5 * * * *" # UTC
+    dockerCommand: python -m app.cli outbox 200
+    startCommand: python -m app.cli outbox 200
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: DATABASE_URL
-        sync: false
-      - key: ADMIN_DATABASE_URL
-        sync: false
-      - key: REDIS_URL
         fromService:
-          type: redis
-          name: travel-system-redis
-          property: connectionString
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL
+      - key: DATABASE_URL_DIRECT
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL_DIRECT
+      - key: ADMIN_DATABASE_URL
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ADMIN_DATABASE_URL
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: SECRET_KEY
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_SECRET
+      - key: JWT_REFRESH_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_REFRESH_SECRET
       - key: ENCRYPTION_KEY
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ENCRYPTION_KEY
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: FRONTEND_URL
+      - key: STORAGE_BACKEND
+        value: local
       - key: STORAGE_ENDPOINT
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ENDPOINT
       - key: STORAGE_BUCKET
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_BUCKET
       - key: STORAGE_ACCESS_KEY
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ACCESS_KEY
       - key: STORAGE_SECRET_KEY
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_SECRET_KEY
       - key: EMAIL_PROVIDER
         value: resend
       - key: EMAIL_FROM
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: EMAIL_FROM
       - key: RESEND_API_KEY
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: JWT_REFRESH_SECRET
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: RESEND_API_KEY
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: BASE_CURRENCY
+        value: UGX
 
-databases:
-  - name: travel-system-redis
-    type: redis
+  - type: cron
+    name: travel-system-reminders
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.api
+    dockerContext: .
     plan: starter
-    ipAllowList: []
-
-crons:
-  - name: travel-system-outbox-sync
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: .
-    schedule: "*/5 * * * *"
+    schedule: "0 9 * * *" # 09:00 UTC = 12:00 EAT, daily
+    dockerCommand: python -m app.cli reminders
+    startCommand: python -m app.cli reminders
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: DATABASE_URL
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL
+      - key: DATABASE_URL_DIRECT
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL_DIRECT
       - key: ADMIN_DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-    buildCommand: "pip install -r requirements.txt"
-    runCommand: "python -m app.tasks.outbox_sync"
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ADMIN_DATABASE_URL
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: SECRET_KEY
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_SECRET
+      - key: JWT_REFRESH_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_REFRESH_SECRET
+      - key: ENCRYPTION_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ENCRYPTION_KEY
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: FRONTEND_URL
+      - key: STORAGE_BACKEND
+        value: local
+      - key: STORAGE_ENDPOINT
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ENDPOINT
+      - key: STORAGE_BUCKET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_BUCKET
+      - key: STORAGE_ACCESS_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ACCESS_KEY
+      - key: STORAGE_SECRET_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_SECRET_KEY
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: EMAIL_FROM
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: EMAIL_FROM
+      - key: RESEND_API_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: RESEND_API_KEY
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: BASE_CURRENCY
+        value: UGX
 
-  - name: travel-system-reminders
+  - type: cron
+    name: travel-system-reconciliation
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile.worker
+    dockerfilePath: ./backend/Dockerfile.api
     dockerContext: .
-    schedule: "0 9 * * *"
+    plan: starter
+    schedule: "0 2 * * *" # 02:00 UTC nightly
+    dockerCommand: python -m app.cli reconcile
+    startCommand: python -m app.cli reconcile
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-    buildCommand: "pip install -r requirements.txt"
-    runCommand: "python -m app.tasks.reminders"
-
-  - name: travel-system-reconciliation
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile.worker
-    dockerContext: .
-    schedule: "0 2 * * *"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL
+      - key: DATABASE_URL_DIRECT
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: DATABASE_URL_DIRECT
       - key: ADMIN_DATABASE_URL
-        sync: false
-    buildCommand: "pip install -r requirements.txt"
-    runCommand: "python -m app.tasks.reconciliation"
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ADMIN_DATABASE_URL
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: SECRET_KEY
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_SECRET
+      - key: JWT_REFRESH_SECRET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: JWT_REFRESH_SECRET
+      - key: ENCRYPTION_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: ENCRYPTION_KEY
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: FRONTEND_URL
+      - key: STORAGE_BACKEND
+        value: local
+      - key: STORAGE_ENDPOINT
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ENDPOINT
+      - key: STORAGE_BUCKET
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_BUCKET
+      - key: STORAGE_ACCESS_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_ACCESS_KEY
+      - key: STORAGE_SECRET_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: STORAGE_SECRET_KEY
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: EMAIL_FROM
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: EMAIL_FROM
+      - key: RESEND_API_KEY
+        fromService:
+          type: web
+          name: travel-system-api
+          envVarKey: RESEND_API_KEY
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: BASE_CURRENCY
+        value: UGX

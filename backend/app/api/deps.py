@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import AsyncGenerator, Awaitable, Callable, Optional, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
+from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
@@ -90,10 +91,10 @@ def get_client_ip(request: Request) -> Optional[str]:
 
 
 __all__: Sequence[str] = [
-    "get_session",
-    "get_current_user",
-    "require_roles",
-    "get_encryption_service",
-    "get_client_ip",
     "bearer_scheme",
+    "get_client_ip",
+    "get_current_user",
+    "get_encryption_service",
+    "get_session",
+    "require_roles",
 ]

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
 import uuid
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class LeadStatus(str, Enum):
+class LeadStatus(StrEnum):
     lead = "lead"
     contacted = "contacted"
     quote_sent = "quote_sent"
@@ -39,10 +39,10 @@ class Lead(Base):
         UUID(as_uuid=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )

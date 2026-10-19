@@ -8,7 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_session
 from app.models.task import FollowUpTask
 from app.models.user import User
-from app.schemas.task import TaskCreate, TaskListResponse, TaskRead, TaskStats, TaskUpdate
+from app.schemas.task import (
+    TaskCreate,
+    TaskListResponse,
+    TaskRead,
+    TaskStats,
+    TaskUpdate,
+)
 from app.services.audit import record_audit
 from app.services.exceptions import ClientNotFoundError
 from app.services.task import TaskService
@@ -59,8 +65,8 @@ async def create_task(
     service = TaskService(session)
     try:
         item = await service.create(payload, actor_id=user.id)
-    except ClientNotFoundError:
-        raise HTTPException(status_code=404, detail="Client not found")
+    except ClientNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Client not found") from exc
     await record_audit(
         session,
         action="create",

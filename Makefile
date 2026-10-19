@@ -28,4 +28,4 @@ typecheck:
 	cd backend && mypy app
 
 smoke:
-	python scripts/smoke_test.py http://localhost:8000
+	SMOKE_ADMIN_PASSWORD=Admin123! python scripts/smoke_test.py http://localhost:8000

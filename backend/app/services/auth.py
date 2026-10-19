@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -26,7 +26,7 @@ class AuthService:
             return None
         if not verify_password(password, user.password_hash):
             return None
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         await self.repo.session.flush()
         return user
 

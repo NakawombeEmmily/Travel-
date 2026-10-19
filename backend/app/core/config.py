@@ -1,10 +1,11 @@
-﻿from pydantic_settings import BaseSettings
-from typing import List, Optional
-import os
+﻿from typing import Optional
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
-    API_HOST: str = "0.0.0.0"
+    API_HOST: str = "0.0.0.0"  # noqa: S104 - container must listen on all interfaces
     API_PORT: int = 8000
     SECRET_KEY: str
     JWT_SECRET: str
@@ -25,7 +26,7 @@ class Settings(BaseSettings):
     STORAGE_ENDPOINT: str = "localhost:9000"
     STORAGE_BUCKET: str = "travel-system"
     STORAGE_ACCESS_KEY: str = "minioadmin"
-    STORAGE_SECRET_KEY: str = "minioadmin"
+    STORAGE_SECRET_KEY: str = "minioadmin"  # noqa: S105 - local MinIO default, overridden by env
     STORAGE_REGION: str = "us-east-1"
     STORAGE_USE_SSL: bool = False
     EMAIL_PROVIDER: str = "mailpit"
@@ -43,7 +44,8 @@ class Settings(BaseSettings):
         env_file = ".env"
 
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
-settings = Settings()
+# Required fields are supplied from the environment by each deployment.
+settings = Settings()  # type: ignore[call-arg]

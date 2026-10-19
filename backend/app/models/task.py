@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from enum import Enum
 import uuid
+from datetime import UTC, date, datetime
+from enum import StrEnum
 
 from sqlalchemy import Date, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,14 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     pending = "pending"
     in_progress = "in_progress"
     completed = "completed"
     cancelled = "cancelled"
 
 
-class TaskPriority(str, Enum):
+class TaskPriority(StrEnum):
     low = "low"
     medium = "medium"
     high = "high"
@@ -46,10 +46,10 @@ class FollowUpTask(Base):
         UUID(as_uuid=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )

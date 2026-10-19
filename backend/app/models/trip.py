@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
-from enum import Enum
 import uuid
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from enum import StrEnum
 
 from sqlalchemy import Date, DateTime, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class TripStatus(str, Enum):
+class TripStatus(StrEnum):
     inquiry = "inquiry"
     confirmed = "confirmed"
     in_progress = "in_progress"
@@ -20,7 +20,7 @@ class TripStatus(str, Enum):
     cancelled = "cancelled"
 
 
-class TripPurpose(str, Enum):
+class TripPurpose(StrEnum):
     tourism = "tourism"
     business = "business"
     study = "study"
@@ -51,12 +51,12 @@ class Trip(Base):
         String(20), default=TripStatus.inquiry.value
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -35,7 +35,7 @@ class ReconciliationService:
                 existing = await ledger_repo.get_by_payment(payment.id)
                 if existing is None:
                     ledger = await self.ledger.sync_payment(payment)
-                    ledger.last_reconciled_at = datetime.now(timezone.utc)
+                    ledger.last_reconciled_at = datetime.now(UTC)
                     created += 1
                     continue
 
@@ -49,10 +49,10 @@ class ReconciliationService:
                     updated += 1
                     mismatched += 1
                     ledger = await self.ledger.sync_payment(payment)
-                    ledger.last_reconciled_at = datetime.now(timezone.utc)
+                    ledger.last_reconciled_at = datetime.now(UTC)
                 else:
-                    existing.last_reconciled_at = datetime.now(timezone.utc)
-            except Exception as exc:  # noqa: BLE001 - collect and continue
+                    existing.last_reconciled_at = datetime.now(UTC)
+            except Exception as exc:
                 errors.append(f"{payment.id}: {exc}")
 
         for currency in currencies:
