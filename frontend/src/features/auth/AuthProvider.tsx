@@ -1,10 +1,17 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
-import { api, clearTokens, getAccessToken, setTokens } from "@/config/api";
+import {
+  api,
+  clearTokens,
+  getAccessToken,
+  SESSION_EXPIRED_EVENT,
+  setTokens,
+} from "@/config/api";
 import type { UserRole } from "./types";
 
 interface User {
@@ -27,12 +34,47 @@ interface AuthContextValue {
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
   hasToken?: boolean;
+  initializing: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [initializing, setInitializing] = useState<boolean>(
+    () => !!getAccessToken(),
+  );
+
+  useEffect(() => {
+    const onExpired = () => setUser(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
+
+  useEffect(() => {
+    if (!getAccessToken()) {
+      setInitializing(false);
+      return;
+    }
+    let active = true;
+    api
+      .get<User>("/auth/me")
+      .then((me) => {
+        if (active) setUser(me);
+      })
+      .catch(() => {
+        if (active) {
+          clearTokens();
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (active) setInitializing(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function establishSession(path: string, body: unknown) {
     const res = await api.post<{ access_token: string; refresh_token: string }>(
@@ -59,7 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, register, logout, hasToken: !!getAccessToken() }}
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        hasToken: !!getAccessToken(),
+        initializing,
+      }}
     >
       {children}
     </AuthContext.Provider>
