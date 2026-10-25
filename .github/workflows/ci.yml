@@ -37,7 +37,7 @@ jobs:
           SECRET_KEY: ci-secret
           JWT_SECRET: ci-jwt
           JWT_REFRESH_SECRET: ci-refresh
-          ENCRYPTION_KEY: Y2ktZW5jcnlwdGlvbi1rZXktMzItYnl0ZXMh
+          ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
           DATABASE_URL: "sqlite+aiosqlite:///:memory:"
           DATABASE_URL_DIRECT: "sqlite+aiosqlite:///:memory:"
           ADMIN_DATABASE_URL: "sqlite+aiosqlite:///:memory:"
