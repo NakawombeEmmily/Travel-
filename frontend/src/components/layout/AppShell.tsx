@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { useTheme } from "@/features/auth/ThemeProvider";
+import { ThemeToggle } from "@/features/auth/ThemeToggle";
 
 const navItems = [
   { to: "/", label: "Dashboard" },
@@ -19,13 +19,13 @@ const navItems = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
-  const { theme, toggle } = useTheme();
 
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-60 flex-col border-r border-[var(--border)] bg-[var(--surface-elevated)]">
         <div className="flex items-center justify-between p-4">
           <Logo size="sm" withWordmark />
+          <ThemeToggle />
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {navItems.map((item) => (
@@ -48,9 +48,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="border-t border-[var(--border)] p-4 text-xs text-[var(--text-muted)]">
           {user?.full_name}
           <div className="mt-2 flex gap-2">
-            <button onClick={toggle} className="underline">
-              {theme === "dark" ? "Light" : "Dark"}
-            </button>
             <button onClick={logout} className="underline">
               Sign out
             </button>
