@@ -88,3 +88,30 @@ async def test_accountant_keeps_payments_but_not_analytics(
     assert (
         await client.get("/api/v1/analytics/summary", headers=headers)
     ).status_code == 403
+
+
+async def test_read_only_can_view_but_not_modify(
+    client: AsyncClient, session: AsyncSession, sample_client: dict
+) -> None:
+    headers = await _headers_for(
+        client, session, email="readonly@example.com", role=UserRole.read_only
+    )
+    assert (await client.get("/api/v1/clients", headers=headers)).status_code == 200
+    assert (
+        await client.post(
+            "/api/v1/clients",
+            headers=headers,
+            json={
+                "full_name": "Blocked User",
+                "email": "blocked@example.com",
+                "consent_given": True,
+            },
+        )
+    ).status_code == 403
+    assert (
+        await client.patch(
+            f"/api/v1/clients/{sample_client['id']}",
+            headers=headers,
+            json={"phone": "+256700000001"},
+        )
+    ).status_code == 403

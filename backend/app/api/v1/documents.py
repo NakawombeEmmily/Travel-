@@ -19,6 +19,7 @@ from app.api.deps import (
     get_current_user,
     get_encryption_service,
     get_session,
+    require_write_access,
 )
 from app.core.security.encryption import EncryptionService
 from app.models.user import User
@@ -27,7 +28,11 @@ from app.services.audit import record_audit
 from app.services.document import DocumentNotFoundError, DocumentService
 from app.services.storage import get_storage
 
-router = APIRouter(prefix="/documents", tags=["documents"])
+router = APIRouter(
+    prefix="/documents",
+    tags=["documents"],
+    dependencies=[Depends(require_write_access)],
+)
 
 
 def _service(

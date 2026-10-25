@@ -37,6 +37,10 @@ class UserRead(UserBase):
     updated_at: datetime
 
 
+class UserRoleUpdate(BaseModel):
+    role: UserRole
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str

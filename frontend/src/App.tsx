@@ -3,7 +3,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AnalyticsPage } from "@/features/analytics/AnalyticsPage";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
-import { canAccessAnalytics, canAccessPayments } from "@/features/auth/permissions";
+import {
+  canAccessAnalytics,
+  canAccessPayments,
+  canManageUsers,
+} from "@/features/auth/permissions";
 import { ClientsPage } from "@/features/clients/ClientsPage";
 import { CrmPage } from "@/features/crm/CrmPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
@@ -11,6 +15,7 @@ import { FeedbackPage } from "@/features/feedback/FeedbackPage";
 import { PaymentsPage } from "@/features/payments/PaymentsPage";
 import { PipelinePage } from "@/features/pipeline/PipelinePage";
 import { TasksPage } from "@/features/tasks/TasksPage";
+import { TeamPage } from "@/features/team/TeamPage";
 import { TripsPage } from "@/features/trips/TripsPage";
 import { VisasPage } from "@/features/visas/VisasPage";
 
@@ -43,6 +48,16 @@ function Protected() {
           element={
             canAccessAnalytics(user?.role) ? (
               <AnalyticsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/team"
+          element={
+            canManageUsers(user?.role) ? (
+              <TeamPage />
             ) : (
               <Navigate to="/" replace />
             )

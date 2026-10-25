@@ -23,3 +23,8 @@ class UserRepository(BaseRepository[User]):
 
     async def get(self, id_: UUID) -> Optional[User]:
         return await self.session.get(User, id_)
+
+    async def list_ordered(self) -> list[User]:
+        stmt = select(User).order_by(User.created_at.asc(), User.email.asc())
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())

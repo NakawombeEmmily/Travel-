@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_session
+from app.api.deps import get_current_user, get_session, require_write_access
 from app.models.tag import Tag
 from app.models.user import User
 from app.schemas.tag import (
@@ -18,7 +18,7 @@ from app.schemas.tag import (
 from app.services.exceptions import ClientNotFoundError, ConflictError, NotFoundError
 from app.services.tag import TagService
 
-router = APIRouter(tags=["tags"])
+router = APIRouter(tags=["tags"], dependencies=[Depends(require_write_access)])
 
 
 @router.get("/tags", response_model=TagListResponse)

@@ -8,6 +8,7 @@ from app.api.deps import (
     get_encryption_service,
     get_session,
     require_roles,
+    require_write_access,
 )
 from app.core.security.encryption import EncryptionService
 from app.models.client import Client
@@ -22,7 +23,11 @@ from app.schemas.client import (
 from app.services.audit import record_audit
 from app.services.client import ClientService, DuplicatePassportError
 
-router = APIRouter(prefix="/clients", tags=["clients"])
+router = APIRouter(
+    prefix="/clients",
+    tags=["clients"],
+    dependencies=[Depends(require_write_access)],
+)
 
 
 def _service(

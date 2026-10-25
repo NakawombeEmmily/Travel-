@@ -5,14 +5,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_session
+from app.api.deps import get_current_user, get_session, require_write_access
 from app.models.trip import Trip
 from app.models.user import User
 from app.schemas.trip import TripCreate, TripListResponse, TripRead, TripUpdate
 from app.services.audit import record_audit
 from app.services.trip import ClientNotFoundError, TripService
 
-router = APIRouter(prefix="/trips", tags=["trips"])
+router = APIRouter(
+    prefix="/trips",
+    tags=["trips"],
+    dependencies=[Depends(require_write_access)],
+)
 
 
 @router.get("", response_model=TripListResponse)

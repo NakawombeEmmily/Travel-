@@ -81,6 +81,21 @@ def require_roles(*roles: UserRole) -> Callable[..., Awaitable[User]]:
     return _dependency
 
 
+WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+async def require_write_access(
+    request: Request,
+    user: User = Depends(get_current_user),
+) -> User:
+    if request.method in WRITE_METHODS and user.role == UserRole.read_only:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Read-only accounts cannot modify data",
+        )
+    return user
+
+
 def get_client_ip(request: Request) -> Optional[str]:
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
@@ -97,4 +112,5 @@ __all__: Sequence[str] = [
     "get_encryption_service",
     "get_session",
     "require_roles",
+    "require_write_access",
 ]

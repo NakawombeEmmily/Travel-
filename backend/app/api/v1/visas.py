@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_session
+from app.api.deps import get_current_user, get_session, require_write_access
 from app.models.user import User
 from app.models.visa import Visa
 from app.schemas.visa import (
@@ -19,7 +19,11 @@ from app.schemas.visa import (
 from app.services.audit import record_audit
 from app.services.visa import ClientNotFoundError, VisaService
 
-router = APIRouter(prefix="/visas", tags=["visas"])
+router = APIRouter(
+    prefix="/visas",
+    tags=["visas"],
+    dependencies=[Depends(require_write_access)],
+)
 
 
 @router.get("", response_model=VisaListResponse)
