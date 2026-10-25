@@ -25,7 +25,16 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(
+            UserRole,
+            name="user_role",
+            schema="crm",
+            create_type=False,
+            values_callable=lambda enum: [member.value for member in enum],
+        ),
+        nullable=False,
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     assigned_clients_only: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
