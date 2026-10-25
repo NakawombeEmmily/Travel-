@@ -127,7 +127,7 @@ class LedgerService:
     async def refresh_revenue_summary(
         self, currency: str, day: Optional[date] = None
     ) -> list[AdminRevenueSummary]:
-        day = day or date.today()
+        day = day or datetime.now(UTC).date()
         month_start = day.replace(day=1)
         last_day = calendar.monthrange(day.year, day.month)[1]
         month_end = day.replace(day=last_day)
