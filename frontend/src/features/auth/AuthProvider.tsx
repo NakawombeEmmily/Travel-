@@ -25,7 +25,6 @@ export interface RegisterPayload {
   email: string;
   full_name: string;
   password: string;
-  registration_code?: string;
 }
 
 interface AuthContextValue {

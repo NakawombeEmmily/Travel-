@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 import { useAuth } from "../auth/AuthProvider";
 
 type Mode = "login" | "register";
@@ -10,7 +11,7 @@ export function LoginPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,20 +20,20 @@ export function LoginPage() {
   function switchMode(next: Mode) {
     setMode(next);
     setError(null);
+    setConfirmPassword("");
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (isRegister && password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     setLoading(true);
     try {
       if (isRegister) {
-        await register({
-          email,
-          full_name: fullName,
-          password,
-          ...(code ? { registration_code: code } : {}),
-        });
+        await register({ email, full_name: fullName, password });
       } else {
         await login(email, password);
       }
@@ -83,26 +84,25 @@ export function LoginPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              className="input"
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               required
               minLength={isRegister ? 8 : undefined}
+              autoComplete={isRegister ? "new-password" : "current-password"}
             />
           </div>
           {isRegister && (
             <div>
               <label className="mb-1 block text-sm font-medium">
-                Registration code{" "}
-                <span className="text-[var(--text-muted)]">(if required)</span>
+                Confirm password
               </label>
-              <input
-                type="text"
-                className="input"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
+              <PasswordInput
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                required
+                minLength={8}
+                autoComplete="new-password"
               />
             </div>
           )}
@@ -116,8 +116,8 @@ export function LoginPage() {
           >
             {loading
               ? isRegister
-                ? "Creating account…"
-                : "Signing in…"
+                ? "Creating account..."
+                : "Signing in..."
               : isRegister
                 ? "Create account"
                 : "Sign in"}

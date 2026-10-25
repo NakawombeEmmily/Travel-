@@ -62,6 +62,15 @@ async def test_register_creates_account_and_logs_in(client: AsyncClient) -> None
     assert "access_token" in body
     assert "refresh_token" in body
 
+    me = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {body['access_token']}"},
+    )
+    assert me.status_code == 200
+    profile = me.json()
+    assert profile["email"] == "newagent@example.com"
+    assert profile["role"] == "agent"
+
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email(client: AsyncClient, admin_user) -> None:
