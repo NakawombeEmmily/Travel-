@@ -2,23 +2,12 @@ import { type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { navItemsFor } from "@/features/auth/permissions";
 import { ThemeToggle } from "@/features/auth/ThemeToggle";
-
-const navItems = [
-  { to: "/", label: "Dashboard" },
-  { to: "/clients", label: "Clients" },
-  { to: "/trips", label: "Trips" },
-  { to: "/visas", label: "Visas" },
-  { to: "/pipeline", label: "Pipeline" },
-  { to: "/tasks", label: "Tasks" },
-  { to: "/crm", label: "CRM" },
-  { to: "/feedback", label: "Feedback" },
-  { to: "/payments", label: "Payments" },
-  { to: "/analytics", label: "Analytics" },
-];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
+  const navItems = navItemsFor(user?.role);
 
   return (
     <div className="flex min-h-screen">

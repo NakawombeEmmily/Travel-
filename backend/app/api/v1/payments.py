@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_session, require_roles
+from app.api.deps import get_session, require_roles
 from app.models.payment import Payment, PaymentInstallment
 from app.models.user import User, UserRole
 from app.repositories.admin import AdminRevenueSummaryRepository
@@ -69,7 +69,7 @@ async def list_payments(
     page: int = 1,
     page_size: int = 50,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentListResponse:
     page = max(page, 1)
     page_size = min(max(page_size, 1), 200)
@@ -90,7 +90,7 @@ async def list_payments(
 @router.get("/stats", response_model=PaymentStats)
 async def payment_stats(
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentStats:
     return await PaymentService(session).stats()
 
@@ -99,7 +99,7 @@ async def payment_stats(
 async def revenue_summaries(
     limit: int = 30,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> list[RevenueSummaryRead]:
     rows = await AdminRevenueSummaryRepository(session).list_recent(
         limit=min(max(limit, 1), 200)
@@ -189,7 +189,7 @@ async def reconcile_payments(
 async def create_payment(
     payload: PaymentCreate,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentRead:
     service = PaymentService(session)
     try:
@@ -217,7 +217,7 @@ async def create_payment(
 async def get_payment(
     payment_id: UUID,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentRead:
     try:
         return await PaymentService(session).get_read(payment_id)
@@ -230,7 +230,7 @@ async def update_payment(
     payment_id: UUID,
     payload: PaymentUpdate,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentRead:
     payment = await _get_or_404(session, payment_id)
     service = PaymentService(session)
@@ -279,7 +279,7 @@ async def pay_installment(
     payment_id: UUID,
     installment_id: UUID,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> PaymentRead:
     payment = await _get_or_404(session, payment_id)
     installment = await session.get(PaymentInstallment, installment_id)
@@ -310,7 +310,7 @@ async def pay_installment(
 async def download_invoice(
     payment_id: UUID,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(*ACCOUNTING_ROLES)),
 ) -> StreamingResponse:
     service = PaymentService(session)
     try:

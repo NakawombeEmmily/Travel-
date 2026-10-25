@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, downloadFile } from "@/config/api";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { ACCOUNTING_ROLES } from "@/features/auth/permissions";
 import type { Client, ClientListResponse } from "@/features/auth/types";
 import type {
   OutboxProcessResult,
@@ -13,7 +14,6 @@ import type {
 
 const METHODS = ["card", "mobile_money", "bank_transfer", "cash"];
 const STATUSES = ["pending", "completed", "failed", "refunded", "partial"];
-const ACCOUNTING_ROLES = ["super_admin", "admin", "accountant"];
 
 interface InstallmentDraft {
   amount: string;

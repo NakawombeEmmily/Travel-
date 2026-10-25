@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AnalyticsPage } from "@/features/analytics/AnalyticsPage";
 import { AuthProvider, useAuth } from "@/features/auth/AuthProvider";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { canAccessAnalytics, canAccessPayments } from "@/features/auth/permissions";
 import { ClientsPage } from "@/features/clients/ClientsPage";
 import { CrmPage } from "@/features/crm/CrmPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
@@ -27,8 +28,26 @@ function Protected() {
         <Route path="/pipeline" element={<PipelinePage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/crm" element={<CrmPage />} />
-        <Route path="/payments" element={<PaymentsPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route
+          path="/payments"
+          element={
+            canAccessPayments(user?.role) ? (
+              <PaymentsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            canAccessAnalytics(user?.role) ? (
+              <AnalyticsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
@@ -36,7 +55,14 @@ function Protected() {
 }
 
 function Root() {
-  const { user, hasToken } = useAuth();
+  const { user, hasToken, initializing } = useAuth();
+  if (initializing) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-[var(--text-muted)]">
+        Loading…
+      </div>
+    );
+  }
   const authed = !!user || !!hasToken;
   return (
     <Routes>

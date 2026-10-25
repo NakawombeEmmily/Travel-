@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_session
-from app.models.user import User
+from app.api.deps import get_session, require_roles
+from app.models.user import User, UserRole
 from app.schemas.analytics import AnalyticsSummary, BreakdownItem, TrendPoint
 from app.schemas.payment import RevenueSummaryRead
 from app.services.analytics import AnalyticsService
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 async def analytics_summary(
     top_nationalities: int = Query(default=10, ge=1, le=100),
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(UserRole.super_admin, UserRole.admin)),
 ) -> AnalyticsSummary:
     return await AnalyticsService(session).summary(top_nationalities)
 
@@ -30,7 +30,7 @@ async def analytics_summary(
 async def analytics_trends(
     months: int = Query(default=6, ge=1, le=24),
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(UserRole.super_admin, UserRole.admin)),
 ) -> list[TrendPoint]:
     return await AnalyticsService(session).trends(months)
 
@@ -39,7 +39,7 @@ async def analytics_trends(
 async def analytics_nationalities(
     limit: int = Query(default=10, ge=1, le=100),
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(UserRole.super_admin, UserRole.admin)),
 ) -> list[BreakdownItem]:
     return await AnalyticsService(session).nationalities(limit)
 
@@ -50,7 +50,7 @@ async def analytics_revenue(
     currency: str | None = None,
     limit: int = Query(default=60, ge=1, le=200),
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(UserRole.super_admin, UserRole.admin)),
 ) -> list[RevenueSummaryRead]:
     rows = await AnalyticsService(session).revenue_summaries(
         period_type=period_type,
@@ -64,7 +64,7 @@ async def analytics_revenue(
 async def export_csv(
     dataset: str,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_roles(UserRole.super_admin, UserRole.admin)),
 ) -> StreamingResponse:
     if dataset not in CSV_DATASETS:
         raise HTTPException(
