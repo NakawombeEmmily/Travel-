@@ -42,7 +42,15 @@ jobs:
           DATABASE_URL_DIRECT: "sqlite+aiosqlite:///:memory:"
           ADMIN_DATABASE_URL: "sqlite+aiosqlite:///:memory:"
           REDIS_URL: redis://localhost:6379/0
-        run: pytest -q
+        run: |
+          set +e
+          pytest -q 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            summary=$(tail -n 40 pytest.log | sed 's/%/%25/g' | tr -d '\r' | awk 'BEGIN { ORS="%0A" } { print }')
+            echo "::error title=Pytest failure::$summary"
+          fi
+          exit "$status"
 
   frontend:
     runs-on: ubuntu-latest
